@@ -3,33 +3,17 @@
 # Radar-Camera Fusion for Collision Warning
 
 ## Overview
-This project is a collaborative effort with the Technology Innovation Hub on Autonomous Navigation (TiHAN) and Suzuki Motor Corporation (SMC) aimed at enhancing vehicle safety. Our system integrates data from radar and cameras to provide accurate, real-time collision warnings, ensuring better object detection and tracking.
+This project, in collaboration with the Technology Innovation Hub on Autonomous Navigation (TiHAN) and Suzuki Motor Corporation (SMC), focuses on enhancing vehicle safety through radar-camera fusion for collision warning. The system integrates data from radar and cameras to accurately detect and track objects, providing real-time collision alerts. Developed entirely from scratch, the project encompasses everything from sensor mounting to final real-time implementation, showcasing a comprehensive end-to-end solution. Our in-house developed algorithms for sensor data fusion and collision detection ensure optimized performance in dynamic environments. This international collaboration underscores our commitment to advancing autonomous navigation technologies, with the aim of making roadways safer. Contributions and feedback from the community are welcome, and detailed guidelines are available for those interested in getting involved.
 
-## Features
-- **Sensor Fusion**: Combines radar and camera data for precise object detection.
-- **Collision Warning**: Provides timely alerts to prevent potential collisions.
-- **From Scratch Implementation**: All components, from sensor mounting to real-time deployment, are developed in-house.
 
 ## Project Highlights
 - **International Collaboration**: Developed with TiHAN and SMC.
 - **Real-Time Performance**: Optimized for dynamic environments.
 - **Comprehensive Development**: Full-stack implementation, including hardware setup, software development, and system integration.
 
-## Technical Details
-- **Sensors Used**: Custom-mounted radar and cameras.
-- **Software**: Proprietary algorithms for sensor data fusion and collision detection.
-- **Implementation**: End-to-end development covering data acquisition, processing, and alert generation.
-
-## Getting Started
-
-### Prerequisites
-- **Hardware**: Radar and camera modules as specified in the hardware documentation.
-- **Software**: Python, OpenCV, and other dependencies listed in `requirements.txt`.
-
 ### Installation
 1. **Clone the Repository**:
    ```bash
    git clone https://github.com/yourusername/radar-camera-fusion.git
-### Contact
-
-Replace `"yourusername"` with your GitHub username and `"your-email@example.com"` with your contact email. If you have specific details for hardware setup or additional documentation files, ensure they are correctly referenced.
+## Contact
+For questions, feedback, or collaboration inquiries, please open an issue on GitHub or contact us directly at [ai23mtech02004@iith.ac.in](mailto:ai23mtech02004@iith.ac.in).
