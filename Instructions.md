@@ -13,7 +13,7 @@ cd /opt/pdk/bin
 ```
 The following is the reference image for pdk.
 
-![pdk](./img/pdk.png)
+<img src="./img/pdk.png" alt="pdk Image" width="400">
 
 #### * The Long range radar ARS430DI will be automatically enabled when we run the above command.Inorder to receive data from Short range radar run the below commands*
 CAN0 is the communication channel for the left Short range RADAR and CAN1 for the Right Short range RADAR mounted on the vehicle.If requested for password provide the admin password of the system.
