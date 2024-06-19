@@ -1,1 +1,3 @@
 # Solio1_RadCam_fusion
+
+This project, in collaboration with the Technology Innovation Hub on Autonomous Navigation (TiHAN) and Suzuki Motor Corporation (SMC), focuses on enhancing vehicle safety through radar-camera fusion for collision warning. The system integrates data from radar and cameras to accurately detect and track objects, providing real-time collision alerts. Developed entirely from scratch, the project encompasses everything from sensor mounting to final real-time implementation, showcasing a comprehensive end-to-end solution. Our in-house developed algorithms for sensor data fusion and collision detection ensure optimized performance in dynamic environments. 
