@@ -2,7 +2,7 @@
 
 ##### Steps
 1) To acquire data from Radar Front/Rear (depending upon the application) and Camera
-2) Follow the steps based on the type of warning ([Front](#section-2)/[Rear](#section-3))
+2) Follow the steps based on the type of warning ([Front](#front)/[Rear](#rear))
 
 ## Enabling Radar Acquisition system
 The common steps carried out in enabling the radar involves:
