@@ -9,7 +9,9 @@ The common steps carried out in enabling the radar involves:
 1) Opening the Perception Development Kit(PDK).The commands below shall be run in the terminal.
 ```bash
 cd /opt/pdk/bin
+./pdk_start.sh
 ```
+
    
 
 ## To perform Forward Collision Warning System
