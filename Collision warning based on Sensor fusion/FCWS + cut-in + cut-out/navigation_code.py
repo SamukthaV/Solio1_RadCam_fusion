@@ -509,6 +509,7 @@ def navigation_output(latitude, longitude, Current_Bearing):
         flasher = 0
 
     log_and_print(f"Speed set by code: {const_speed:.0f} kmph")
+    print(f"Current Speed: {current_vel} m/s")
     try:
         message = send_message_to_mabx(
             const_speed, steer_output, 0, flasher, counter)
@@ -549,7 +550,7 @@ if __name__ == "__main__":
     global speed, reduction_factor, steer_output, counter, wp, file_path, pothole_flag, pothole_speed
 
     # Define the path(not relative path) to the waypoints file
-    #file_path = '/home/intel-nuc/Desktop/Solio-ADAS/Solio-Suzuki/navigation/solio-waypoints/Solio1/waypoints-speedtest-reverse.txt'
+    #file_path = '/home/orin/basler_v8/Waypoints/waypoints-maingate_to_testbed.txt'
     file_path = "/home/orin/basler_v8/Waypoints/waypoints-final.txt"
     #file_path="/home/s186/Desktop/Solio-ADAS/Solio-Suzuki/navigation/Waypoints/waypoints-keshav4.txt"
    #file_path ="/home/s186/Desktop/Solio-ADAS/Solio-Suzuki/navigation/Waypoints/waypoints-keshav2.txt"

@@ -95,7 +95,7 @@ while camera.IsGrabbing():
         # Access the image data
         image = converter.Convert(grabResult)
         img = image.GetArray()
-        img = cv2.resize(img, (640, 480), interpolation=cv2.INTER_AREA)
+        img = cv2.resize(img, (640,480), interpolation=cv2.INTER_AREA)
 
         # Convert the image to a ROS message
         ros_image = cv2_to_imgmsg(img)
