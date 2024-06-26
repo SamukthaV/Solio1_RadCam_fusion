@@ -45,20 +45,20 @@ python3 front_radcam_fusion.py
 python3 integrate_sensor_commands.py
 ```
 ## To perform Rear Collision Warning System
-1. Run the python file [publishing front camera data](https://github.com/SamukthaV/Solio1_RadCam_fusion/blob/main/Collision%20warning%20based%20on%20Sensor%20fusion/FCWS%20%2B%20cut-in%20%2B%20cut-out/front_cam_pub.py)
+1. Run the python file [publishing rear camera data](https://github.com/SamukthaV/Solio1_RadCam_fusion/blob/main/Collision%20warning%20based%20on%20Sensor%20fusion/RCWS/Rear_cam_pub_.py)
 ```bash
 source fusion/bin/activate
-python3 front_cam_pub.py
+python3 Rear_cam_pub.py
 ```
 3. Source the radar functions by running the following command
    ```bash
    source /home/orin/Downloads/radar_ros/src/conti_radar/_build/devel/setup.bash
 
     ```
-4.  Run the python file [fusing front radar and camera data](https://github.com/SamukthaV/Solio1_RadCam_fusion/blob/main/Collision%20warning%20based%20on%20Sensor%20fusion/FCWS%20%2B%20cut-in%20%2B%20cut-out/front_radcam_fusion.py)
+4.  Run the python file [fusing rear radar and camera data](https://github.com/SamukthaV/Solio1_RadCam_fusion/blob/main/Collision%20warning%20based%20on%20Sensor%20fusion/RCWS/Rear_radcam_fusion.py)
 ```bash
 source fusion/bin/activate
-python3 front_radcam_fusion.py
+python3 Rear_radcam_fusion.py
 ```
 6. To integrate all the commands from SRR of both the sides and LRR of front and rear [integrated vehicle commands](https://github.com/SamukthaV/Solio1_RadCam_fusion/blob/main/Collision%20warning%20based%20on%20Sensor%20fusion/FCWS%20%2B%20cut-in%20%2B%20cut-out/integrate%20sensor%20commands.py)
 ```bash
