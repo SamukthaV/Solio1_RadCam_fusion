@@ -1,4 +1,13 @@
-#### *This instruction manual helps the users to run Collision warning system in SOLIO provided the sensors are mounted and the  connections are made as mentioned [here](https://github.com/SamukthaV/Solio1_RadCam_fusion/tree/main/Hardware%20setup%20)*
+#### *This instruction manual helps the users to run the Collision warning system in SOLIO, provided the sensors are mounted and the  connections are made as shown below*
+<img src="./img/hardware.png" alt="Hardware image" width="400"> 
+
+###  Configuring the RADAR and Camera sensors:
+##### Camera
+Install PylonViewer software based on the camera model to access and control the settings of Basler camera.
+The camera model used in the project is acA1920-40uc
+Now, set the frame rate and the autofocus mode on pylonviewer, as shown below.
+<img src="./img/pylon.png" alt="Pylonviewer" width="400"> 
+
 
 ##### Steps
 1) To acquire data from Radar Front/Rear (depending upon the application) and Camera
