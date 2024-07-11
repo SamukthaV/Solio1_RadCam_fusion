@@ -1,22 +1,24 @@
 ## User manual
 
-#### *This instruction manual helps the users to run the Collision warning system in SOLIO, provided the sensors are mounted and the  connections are made as shown below*
+#### *This instruction manual helps the users to run the Collision warning system in SOLIO. The sensors and the  connections to ORIN are made as shown below*
 <img src="./img/hardware.png" alt="Hardware image" width="400"> 
 
 ###  Configuring the RADAR and Camera sensors:
 ##### Camera
-Install PylonViewer software based on the camera model to access and control the settings of Basler camera.
-The camera model used in the project is acA1920-40uc
-Now, set the frame rate and the autofocus mode on pylonviewer, as shown below.
+Install PylonViewer software based on the camera model to access and control the settings of the Basler camera.
+The camera model used in the project is **acA1920-40uc**
+Now, the frame rate and the autofocus mode on the pylon viewer are set as shown below.
 <img src="./img/pylon.png" alt="Pylonviewer" width="400"> 
-
+##### Radar
+Configure the radar sensor as shown below:
+<img src="./img/radar_wired.png" alt="RADAR wired settings" width="400"> 
 
 ##### Steps
 1) To acquire data from Radar Front/Rear (depending upon the application) and Camera
 2) Follow the steps based on the type of warning ([Front](#to-perform-forward-collision-warning-system)/[Rear](#to-perform-rear-collision-warning-system))
  
 ## Enabling Radar Acquisition system
-The common steps carried out in enabling the radar involves:
+The common steps carried out in enabling the radar involve:
 1) Opening the Perception Development Kit(PDK)
 ```bash
 cd /opt/pdk/bin
