@@ -1,3 +1,5 @@
+## User manual
+
 #### *This instruction manual helps the users to run the Collision warning system in SOLIO, provided the sensors are mounted and the  connections are made as shown below*
 <img src="./img/hardware.png" alt="Hardware image" width="400"> 
 
