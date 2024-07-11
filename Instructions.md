@@ -1,4 +1,4 @@
-## User manual
+## User manual for Radar and Camera-based Collision Warning System
 
 #### *This instruction manual helps the users to run the Collision warning system in SOLIO. The sensors and the  connections to ORIN are made as shown below*
 <img src="./img/hardware.png" alt="Hardware image" width="400"> 
