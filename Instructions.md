@@ -9,6 +9,7 @@
 The camera model used in the project is **acA1920-40uc**
 Now, the frame rate and the autofocus mode on the pylon viewer are set as shown below.
 <img src="./img/pylon.png" alt="Pylonviewer" width="400"> 
+
 ##### Radar
 Configure the radar sensor as shown below:
 <img src="./img/radar_wired.png" alt="RADAR wired settings" width="400"> 
@@ -21,12 +22,14 @@ Configure the radar sensor as shown below:
 ## Enabling Radar Acquisition system
 The common steps carried out in enabling the radar involve:
 1) Opening the Perception Development Kit(PDK)
+2) 
 ```bash
 cd /opt/pdk/bin
 ./pdk_start.sh
 ```
 #### *The Long-range radar ARS430DI will be automatically enabled when we run the above command.Inorder to receive data from Short range radar, run the below commands*
 CAN0 is the communication channel for the left Short range RADAR and CAN1 for the Right Short range RADAR mounted on the vehicle. If requested for a password, provide the system admin password.
+
 ```bash
 sudo ip link set can0 up type can bitrate 500000 dbitrate 2000000 fd on
 sudo ip link set can1 up type can bitrate 500000 dbitrate 2000000 fd on
@@ -37,9 +40,6 @@ The following is the reference image for pdk.
 <img src="./img/pdk.png" alt="pdk Image" width="400"> 
 
 ## Publishing radar data 
-```bash
-
-```
 
 ## To perform Forward Collision Warning System
 1. Run the Python file [publishing front camera data](https://github.com/SamukthaV/Solio1_RadCam_fusion/blob/main/Collision%20warning%20based%20on%20Sensor%20fusion/FCWS%20%2B%20cut-in%20%2B%20cut-out/front_cam_pub.py)
