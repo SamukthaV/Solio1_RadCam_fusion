@@ -5,7 +5,7 @@
 
 ###  Configuring the RADAR and Camera sensors:
 ##### Camera
-Install PylonViewer software based on the camera model to access and control the settings of the Basler camera.
+[Install PylonViewer](https://www.baslerweb.com/en/products/) software based on the camera model to access and control the settings of the Basler camera.
 The camera model used in the project is **acA1920-40uc**
 Now, the frame rate and the autofocus mode on the pylon viewer are set as shown below.
 <img src="./img/pylon.png" alt="Pylonviewer" width="400"> 
