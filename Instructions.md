@@ -13,6 +13,8 @@ Now, the frame rate and the autofocus mode on the pylon viewer are set as shown 
 Configure the radar sensor as shown below:
 <img src="./img/radar_wired.png" alt="RADAR wired settings" width="400"> 
 
+###  Data acquisition from sensors
+
 ##### Steps
 1) To acquire data from Radar Front/Rear (depending upon the application) and Camera
 2) Follow the steps based on the type of warning ([Front](#to-perform-forward-collision-warning-system)/[Rear](#to-perform-rear-collision-warning-system))
