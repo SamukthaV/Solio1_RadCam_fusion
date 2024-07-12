@@ -1,9 +1,11 @@
 # User Manual for Radar and Camera-based Collision Warning System
 
 ### *This instruction manual helps users run the Collision Warning System in SOLIO. The sensors and the connections to ORIN are shown below:*
-<img src="./img/hardware.png" alt="Hardware image" width="400"> 
+<div align="center">
+    <img src="./img/hardware.png" alt="Hardware image" width="400"> 
+</div>
 
-## 1. Configuring the RADAR and Camera Sensors:
+##  1. Configuring the Radar and Camera Sensors:
 
 ### Camera
 1. [Install PylonViewer](https://www.baslerweb.com/en/products/) software based on the camera model to access and control the settings of the Basler camera.
