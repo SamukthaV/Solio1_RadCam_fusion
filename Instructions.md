@@ -8,10 +8,12 @@
 [Install PylonViewer](https://www.baslerweb.com/en/products/) software based on the camera model to access and control the settings of the Basler camera.
 The camera model used in the project is **acA1920-40uc**
 Now, the frame rate and the autofocus mode on the pylon viewer are set as shown below.
+
 <img src="./img/pylon.png" alt="Pylonviewer" width="400"> 
 
 ##### Radar
 Configure the radar sensor as shown below:
+
 <img src="./img/radar_wired.png" alt="RADAR wired settings" width="400"> 
 
 ###  2) Data acquisition from sensors
@@ -102,11 +104,7 @@ python3 front_radcam_fusion.py
 ```
 <img src="./img/frontfusion.png" alt="Pylonviewer" width="400"> 
 
-6. To integrate all the commands from SRR of both the sides and LRR of front and rear [integrated vehicle commands](https://github.com/SamukthaV/Solio1_RadCam_fusion/blob/main/Collision%20warning%20based%20on%20Sensor%20fusion/FCWS%20%2B%20cut-in%20%2B%20cut-out/integrate%20sensor%20commands.py)
-   
-```bash
-python3 integrate_sensor_commands.py
-```
+
 ## To perform Rear Collision Warning System
 1. Run the Python file [publishing rear camera data](https://github.com/SamukthaV/Solio1_RadCam_fusion/blob/main/Collision%20warning%20based%20on%20Sensor%20fusion/RCWS/Rear_cam_pub_.py)
 ```bash
