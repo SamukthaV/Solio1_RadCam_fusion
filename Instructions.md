@@ -60,14 +60,7 @@ cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
 ./srr_right_obj
 ```
 The algorithm below ensures the ego vehicle adjusts its speed based on the movement of an obstacle vehicle in an adjacent lane.
-```bash
-cd Downloads/radar_ros/src/conti_radar/src
-python3 srr_right_updated.py
-```
-```bash
-cd Downloads/radar_ros/src/conti_radar/src
-python3 srr_left_updated.py
-```
+
 
 The filtering algorithm operates based on distances between the obstacle and ego vehicles. It ensures the ego vehicle's speed is reduced when an obstacle vehicle crosses into its lane, and the speed remains unchanged when it stays in its own lane. The code executes commands to adjust the vehicle's speed appropriately when a vehicle cuts in or out in either direction.
 
@@ -79,7 +72,12 @@ The filtering algorithm operates based on distances between the obstacle and ego
 
 The following code snippet demonstrates how the filtering algorithm operates and publishes commands based on the obstacle vehicle's actions:
 ```bash
-
+cd Downloads/radar_ros/src/conti_radar/src
+python3 srr_right_updated.py
+```
+```bash
+cd Downloads/radar_ros/src/conti_radar/src
+python3 srr_left_updated.py
 ```
 
 
