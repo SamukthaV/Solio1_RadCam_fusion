@@ -21,8 +21,7 @@ Configure the radar sensor as shown below:
  
 ## Enabling Radar Acquisition system
 The common steps carried out in enabling the radar involve:
-1) Opening the Perception Development Kit(PDK)
-2) 
+1) Enabling the Perception Development Kit(PDK)
 ```bash
 cd /opt/pdk/bin
 ./pdk_start.sh
@@ -40,6 +39,49 @@ The following is the reference image for pdk.
 <img src="./img/pdk.png" alt="pdk Image" width="400"> 
 
 ## Publishing radar data 
+1) To publish Front long-range radar
+```bash
+cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
+./lrr_front_obj
+```
+2) To publish Rear long-range radar
+```bash
+cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
+./lrr_rear_obj
+```
+3) To publish Left short-range radar
+```bash
+cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
+./srr_left_obj
+```
+4) To publish the Right short-range radar
+```bash
+cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
+./srr_right_obj
+```
+The algorithm below ensures the ego vehicle adjusts its speed based on the movement of an obstacle vehicle in an adjacent lane.
+```bash
+cd Downloads/radar_ros/src/conti_radar/src
+python3 srr_right_updated.py
+```
+```bash
+cd Downloads/radar_ros/src/conti_radar/src
+python3 srr_left_updated.py
+```
+
+The filtering algorithm operates based on distances between the obstacle and ego vehicles. It ensures the ego vehicle's speed is reduced when an obstacle vehicle crosses into its lane, and the speed remains unchanged when it stays in its own lane. The code executes commands to adjust the vehicle's speed appropriately when a vehicle cuts in or out in either direction.
+
+##### Commands
+- **slowdown**
+  - Reduces the vehicle's speed to half.
+- **go**
+  - Maintains the vehicle's current speed.
+
+The following code snippet demonstrates how the filtering algorithm operates and publishes commands based on the obstacle vehicle's actions:
+```bash
+
+```
+
 
 ## To perform Forward Collision Warning System
 1. Run the Python file [publishing front camera data](https://github.com/SamukthaV/Solio1_RadCam_fusion/blob/main/Collision%20warning%20based%20on%20Sensor%20fusion/FCWS%20%2B%20cut-in%20%2B%20cut-out/front_cam_pub.py)
