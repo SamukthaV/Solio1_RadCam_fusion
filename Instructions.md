@@ -1,82 +1,88 @@
-## User manual for Radar and Camera-based Collision Warning System
+# User Manual for Radar and Camera-based Collision Warning System
 
-#### *This instruction manual helps the users to run the Collision warning system in SOLIO. The sensors and the  connections to ORIN are made as shown below*
+### *This instruction manual helps users run the Collision Warning System in SOLIO. The sensors and the connections to ORIN are shown below:*
 <img src="./img/hardware.png" alt="Hardware image" width="400"> 
 
-###  1) Configuring the RADAR and Camera sensors:
-##### Camera
-[Install PylonViewer](https://www.baslerweb.com/en/products/) software based on the camera model to access and control the settings of the Basler camera.
-The camera model used in the project is **acA1920-40uc**
-Now, the frame rate and the autofocus mode on the pylon viewer are set as shown below.
+## 1. Configuring the RADAR and Camera Sensors:
 
-<img src="./img/pylon.png" alt="Pylonviewer" width="400"> 
+### Camera
+1. [Install PylonViewer](https://www.baslerweb.com/en/products/) software based on the camera model to access and control the settings of the Basler camera.
+2. The camera model used in the project is **acA1920-40uc**.
+3. Set the frame rate and the autofocus mode on the PylonViewer as shown below.
+   
+   <img src="./img/pylon.png" alt="Pylonviewer" width="400"> 
 
-##### Radar
-Configure the radar sensor as shown below:
+### Radar
+1. Configure the radar sensor as shown below:
+   
+   <img src="./img/radar_wired.png" alt="RADAR wired settings" width="400"> 
 
-<img src="./img/radar_wired.png" alt="RADAR wired settings" width="400"> 
+## 2. Data Acquisition from Sensors
 
-###  2) Data acquisition from sensors
-##### Steps
-1) To acquire data from Radar Front/Rear (depending upon the application) and Camera
-2) Follow the steps based on the type of warning ([Front](#to-perform-forward-collision-warning-system)/[Rear](#to-perform-rear-collision-warning-system))
- 
-## Enabling Radar Acquisition system
-The common steps carried out in enabling the radar involve:
-1) Enabling the Perception Development Kit(PDK)
-```bash
-cd /opt/pdk/bin
-./pdk_start.sh
-```
-#### *The Long-range radar ARS430DI will be automatically enabled when we run the above command.Inorder to receive data from Short range radar, run the below commands*
-CAN0 is the communication channel for the left Short range RADAR and CAN1 for the Right Short range RADAR mounted on the vehicle. If requested for a password, provide the system admin password.
+### Steps
+1. To acquire data from Radar Front/Rear (depending on the application) and Camera.
+2. Follow the steps based on the type of warning:
+   - [Front](#to-perform-forward-collision-warning-system)
+   - [Rear](#to-perform-rear-collision-warning-system)
 
-```bash
-sudo ip link set can0 up type can bitrate 500000 dbitrate 2000000 fd on
-sudo ip link set can1 up type can bitrate 500000 dbitrate 2000000 fd on
+## Enabling Radar Acquisition System
+The common steps involved in enabling the radar system are as follows:
 
-```
-The following is the reference image for pdk.
+1. Enabling the Perception Development Kit (PDK):
+    ```bash
+    cd /opt/pdk/bin
+    ./pdk_start.sh
+    ```
+   *The Long-range radar ARS430DI will be automatically enabled when the above command is run. To receive data from the Short-range radar, run the below commands.*
 
-<img src="./img/pdk.png" alt="pdk Image" width="400"> 
+2. Set up CAN0 for the left Short-range RADAR and CAN1 for the Right Short-range RADAR mounted on the vehicle. If prompted for a password, provide the system admin password.
+    ```bash
+    sudo ip link set can0 up type can bitrate 500000 dbitrate 2000000 fd on
+    sudo ip link set can1 up type can bitrate 500000 dbitrate 2000000 fd on
+    ```
 
-## Publishing radar data 
-1) To publish Front long-range radar
-```bash
-cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
-./lrr_front_obj
-```
-2) To publish Rear long-range radar
-```bash
-cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
-./lrr_rear_obj
-```
-3) To publish Left short-range radar
-```bash
-cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
-./srr_left_obj
-```
-4) To publish the Right short-range radar
-```bash
-cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
-./srr_right_obj
-```
-The algorithm below ensures the ego vehicle adjusts its speed based on the movement of an obstacle vehicle in an adjacent lane.
+   The following is the reference image for PDK:
 
+   <img src="./img/pdk.png" alt="PDK Image" width="400"> 
 
-The filtering algorithm operates based on distances between the obstacle and ego vehicles. It ensures the ego vehicle's speed is reduced when an obstacle vehicle crosses into its lane, and the speed remains unchanged when it stays in its own lane. The code executes commands to adjust the vehicle's speed appropriately when a vehicle cuts in or out in either direction.
+## Publishing Radar Data 
+1. To publish Front long-range radar:
+    ```bash
+    cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
+    ./lrr_front_obj
+    ```
+2. To publish Rear long-range radar:
+    ```bash
+    cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
+    ./lrr_rear_obj
+    ```
+3. To publish Left short-range radar:
+    ```bash
+    cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
+    ./srr_left_obj
+    ```
+4. To publish Right short-range radar:
+    ```bash
+    cd Downloads/radar_ros/src/conti_radar/_build/devel/lib/conti_radar/
+    ./srr_right_obj
+    ```
 
-##### Commands
+## Speed Adjustment Algorithm
+
+The algorithm ensures the ego vehicle adjusts its speed based on the movement of an obstacle vehicle in an adjacent lane. It operates based on distances between the obstacle and ego vehicles. The ego vehicle's speed is reduced when an obstacle vehicle crosses into its lane and remains unchanged when the obstacle stays in its own lane. The code executes commands to adjust the vehicle's speed appropriately when a vehicle cuts in or out in either direction.
+
+### Commands
 - **slowdown**
   - Reduces the vehicle's speed to half.
 - **go**
   - Maintains the vehicle's current speed.
 
 The following code snippet demonstrates how the filtering algorithm operates and publishes commands based on the obstacle vehicle's actions:
+
 ```bash
 cd Downloads/radar_ros/src/conti_radar/src
 python3 srr_right_updated.py
-```
+
 ```bash
 cd Downloads/radar_ros/src/conti_radar/src
 python3 srr_left_updated.py
