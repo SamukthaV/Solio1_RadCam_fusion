@@ -95,9 +95,11 @@ The following code snippet demonstrates how the filtering algorithm operates and
 
 ```bash
 cd Downloads/radar_ros/src/conti_radar/src
+source /home/orin/Downloads/radar_ros/src/conti_radar/_build/devel/setup.bash
 python3 srr_right_updated.py
-#open an other terminal
+#open another terminal
 cd Downloads/radar_ros/src/conti_radar/src
+source /home/orin/Downloads/radar_ros/src/conti_radar/_build/devel/setup.bash
 python3 srr_left_updated.py
 ```
 
@@ -108,7 +110,8 @@ python3 srr_left_updated.py
 
 ## To perform Forward Collision Warning System
 1. Run the Python file [publishing front camera data](https://github.com/SamukthaV/Solio1_RadCam_fusion/blob/main/Collision%20warning%20based%20on%20Sensor%20fusion/FCWS%20%2B%20cut-in%20%2B%20cut-out/front_cam_pub.py)
-```bashTo run the vehicle navigation command, ensure all sensors are properly configured and data is being published from both RADAR and camera systems. Integrate the sensor commands to facilitate real-time navigation adjustments. Execute the integrated vehicle navigation script as shown below:
+To run the vehicle navigation command, ensure all sensors are properly configured and data is being published from both RADAR and camera systems. Integrate the sensor commands to facilitate real-time navigation adjustments. Execute the integrated vehicle navigation script as shown below:
+```bash
 source fusion/bin/activate
 python3 front_cam_pub.py
 ```
