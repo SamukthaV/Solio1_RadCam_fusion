@@ -19,4 +19,5 @@ This international collaboration underscores our commitment to advancing autonom
    ```bash
    git clone https://github.com/yourusername/radar-camera-fusion.git
 ## Contact
-For questions, feedback, or collaboration inquiries, please open an issue on GitHub or contact us directly at [ai23mtech02004@iith.ac.in](mailto:ai23mtech02004@iith.ac.in).
+For queries related to Hardware and software installations and environment setup contact us directly at [chandaiah.kamal@ee.iith.ac.in](mailto:chandaiah.kamal@ee.iith.ac.in) and [ai23mtech02004@iith.ac.in](mailto:ai23mtech02004@iith.ac.in).
+For queries regarding the algorithm, contact us directly at [ai23mtech02004@iith.ac.in](mailto:ai23mtech02004@iith.ac.in).
