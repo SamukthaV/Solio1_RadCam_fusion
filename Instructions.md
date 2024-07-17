@@ -86,9 +86,9 @@ The algorithm ensures the ego vehicle adjusts its speed based on the movement of
 ### Commands
 - **STOP**
   - Reduces the vehicle's speed to zero.
-- **slowdown**
+- **SLOW**
   - Reduces the vehicle's speed to half.
-- **go**
+- **GO**
   - Maintains the vehicle's current speed.
 
 The following code snippet demonstrates how the filtering algorithm operates and publishes commands based on the obstacle vehicle's actions:
