@@ -28,6 +28,7 @@ circle_radius = 4
 # Color in (B, G, R) format for drawing circles
 colors = (0, 0, 255)
 
+
 def compute_world2img_projection(world_points, M, is_homogeneous=False):
     if not is_homogeneous:
         points_h = np.vstack((world_points[:3, :], np.ones(world_points.shape[1])))
@@ -61,18 +62,86 @@ def bbox_callback(msg):
     current_bounding_boxes = list_of_lists
 
 
-def put_text_center(img, text, font_scale, color, thickness):
+def put_text_center(class_name,img, text, font_scale=1, color=(0, 0, 255), thickness=2):
+
     # Get the size of the text
     text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness)[0]
 
-    # Calculate the position to place the text at the center of the image
-    text_x = (img.shape[1] - text_size[0]) // 2
-    text_y = (img.shape[0] + text_size[1]) // 2
+    # Calculate the x position to center the text
+    text_x = int((img.shape[1] - text_size[0]) / 2)
 
+    # Set the y position to be just slightly below the top of the image
+    if (class_name!=0):
+        text_y = text_size[1] + 10  # 10 pixels padding from the top
+    else:
+        text_y = text_size[1] + 50
     # Put the text on the image
     cv2.putText(img, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness)
 
 
+def put_text_top_left_of_box(img, text, box_coords, font_scale=2.5, color=(0, 0, 255), thickness=3):
+    """
+    Places the specified text on the top-left corner outside the bounding box.
+    
+    Parameters:
+        img (numpy.ndarray): The image on which to place the text.
+        text (str): The text string to display.
+        box_coords (tuple): The bounding box coordinates in the format (xmax, xmin, ymax, ymin).
+        font_scale (float): The scale of the text.
+        color (tuple): The color of the text in BGR format.
+        thickness (int): The thickness of the text.
+    """
+    xmax, xmin, ymax, ymin = box_coords
+
+    # Calculate the top-left corner of the bounding box
+    x = xmin
+    y = ymin
+
+    # Get the size of the text
+    text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_PLAIN, font_scale, thickness)[0]
+
+    # Set the position for the text (top-left of the bounding box, slightly above it)
+    text_x = x
+    text_y = y - 10  # 10 pixels above the top of the bounding box
+
+    # Adjust y position if the text goes out of the image frame
+    if text_y < 0:
+        text_y = y + text_size[1] + 10
+
+    # Put the text on the image
+    cv2.putText(img, text, (text_x, text_y), cv2.FONT_HERSHEY_PLAIN, font_scale, color, thickness)
+
+def put_text_bottom_left_of_box(img, text, box_coords, font_scale=2.5, color=(0, 0, 255), thickness=3):
+    """
+    Places the specified text on the bottom-left corner outside the bounding box.
+    
+    Parameters:
+        img (numpy.ndarray): The image on which to place the text.
+        text (str): The text string to display.
+        box_coords (tuple): The bounding box coordinates in the format (xmax, xmin, ymax, ymin).
+        font_scale (float): The scale of the text.
+        color (tuple): The color of the text in BGR format.
+        thickness (int): The thickness of the text.
+    """
+    xmax, xmin, ymax, ymin = box_coords
+
+    # Calculate the bottom-left corner of the bounding box
+    x = xmin
+    y = ymax
+
+    # Get the size of the text
+    text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_PLAIN, font_scale, thickness)[0]
+
+    # Set the position for the text (bottom-left of the bounding box, slightly below it)
+    text_x = x
+    text_y = y + text_size[1] + 10  # 10 pixels below the bottom of the bounding box
+
+    # Adjust y position if the text goes out of the image frame
+    if text_y > img.shape[0]:  # If the text goes below the image
+        text_y = y - 10  # Place it inside the bounding box instead
+
+    # Put the text on the image
+    cv2.putText(img, text, (text_x, text_y), cv2.FONT_HERSHEY_PLAIN, font_scale, color, thickness)
 
 
 def image_callback(msg):
@@ -85,10 +154,10 @@ def image_callback(msg):
         # Extract relevant radar data
         x = -np.asarray(current_x)
         y = np.asarray(current_y)
-        range = np.sqrt(pow(x, 2) + pow(y, 2))
+        range = np.sqrt(np.square(x) + np.square(y))
         velp = np.asarray(vabsx)
         velq = np.asarray(vabsy)
-        vel = np.sqrt(pow(velp, 2) + pow(velq, 2))
+        vel = np.sqrt(np.square(velp) + np.square(velq))
 
         # Project radar points onto the image
         predictions = compute_world2img_projection(np.vstack((x, y, np.ones_like(x) * 0.78)), ndlt)
@@ -96,53 +165,80 @@ def image_callback(msg):
 
         # Iterate over each bounding box
         for class_name, x_min, y_min, x_max, y_max in current_bounding_boxes:
-            x_min, y_min, x_max, y_max = int(x_min), int(y_min), int(x_max), int(y_max)
+                    
+                    x_min, y_min, x_max, y_max = int(x_min), int(y_min), int(x_max), int(y_max)
 
-            # Find the radar point with the shortest range within the bounding box
-            min_range_index = None
-            min_range = float('inf')
-            for i, (px, py) in enumerate(predictions):
-                px, py = int(px), int(py)
-                if x_min <= px <= x_max and y_min <= py <= y_max:
-                    if range[i] < min_range:
-                        min_range = range[i]
-                        min_range_index = i
+                    # Find the radar point with the shortest range within the bounding box
+                    min_range_index = None
+                    min_range = float('inf')
+                    for i, (px, py) in enumerate(predictions):
+                        px, py = int(px), int(py)
+                        if x_min <= px <= x_max and y_min <= py <= y_max:
+                            if range[i] < min_range and -2.0 <= current_y[i] <= 2.0:   #road width
+                                min_range = range[i]
+                                min_range_index = i
 
-            # If a radar point is found within the bounding box, display it
-            if min_range_index is not None:
-                px, py = predictions[min_range_index]
-                r = range[min_range_index]
-                v = vel[min_range_index]
-                r= r-0.7
+                    # If a radar point is found within the bounding box, display it
+                    if min_range_index is not None:
+                        px, py = predictions[min_range_index]
+                        r = range[min_range_index]
+                        r = r - 4.0
+                        v = vel[min_range_index]
+                        print("#########################",class_name)
+                        # Print information about the closest radar point
+                        print(f"Bounding Box: {class_name} ({x_min}, {y_min}) - ({x_max}, {y_max})")
+                        print(f"Closest Point: ({px}, {py}), Range: {r:.2f} m, Velocity: {v:.1f} m/s")
+                        v= v*3.6 
+                        print(f"Velocity: {float(v)} kmph")
+                        # Draw the bounding box on the image
+                        cv2.rectangle(cv_image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
 
-                # Print information about the closest radar point
-                print(f"Bounding Box: {class_name} ({x_min}, {y_min}) - ({x_max}, {y_max})")
-                print(f"Closest Point: ({px}, {py}), Range: {r:.2f} m, Velocity: {v:.1f} m/s")
+                        # Draw a circle and text for the closest radar point
+                        cv2.circle(cv_image, (int(px), int(py)), circle_radius, colors, -1)
+                        text = f"Range: {r:.2f} m"
+                        v = round(v,2)
+                        velocity = f"Velocity: {float(v)} kmph"
+                        put_text_top_left_of_box(cv_image, text, [x_max,x_min,y_max,y_min], font_scale=1.5, color=(153, 0, 153), thickness=2)
+                        # cv2.putText(cv_image, text, (int(px), int(py) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0., colors, 2)
+                        put_text_bottom_left_of_box(cv_image, velocity, [x_max,x_min,y_max,y_min], font_scale=1.5, color=(153, 0, 153), thickness=2)
+                        # cv2.putText(cv_image, velocity, (int(px), int(py) +40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, colors, 2)
+                        if class_name == 0.0:
+                            out = "PEDESTRIAN -"
+                        elif class_name == 1.0:
+                            out = "BICYCLE -"
+                        elif class_name == 2.0:
+                            out = "CAR -"
+                        elif class_name == 7.0:
+                            out = "TRUCK -"
+                        else:
+                            out = "Unknown Object -"
 
-                # Draw the bounding box on the image
-                cv2.rectangle(cv_image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+                        # Apply the condition for y value
+                        if 0 <= r <= 10:
+                            text = out + "Collision Alert"
+                            put_text_center(class_name,cv_image, text, 1, (0, 0, 255), 2)
+                            check = 1
+                        elif 10 < r <= 20:
+                            text = out + "Alert"
+                            put_text_center(class_name,cv_image, text, 1, (0, 0, 255), 2)
+                            check = 2
+                        else:
+                            text = out + " GO"
+                            put_text_center(class_name,cv_image, text, 1, (0, 255, 0), 2)
 
-                # Draw a circle and text for the closest radar point
-                cv2.circle(cv_image, (int(px), int(py)), circle_radius, colors, -1)
-                #text = f"Range: {r:.2f} m, Velocity: {v:.1f} m/s"
-                text = f"Range: {r:.2f} m"
-                cv2.putText(cv_image, text, (int(px), int(py) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors, 2)
-                vehicle_cmd_pub = rospy.Publisher('/bcws_commands', String, queue_size=10)
-                if 0<=r<=7+1:
-                    text = "Rear collision alert"
-                    vehicle_cmd_pub.publish("STOP")
-                    put_text_center(cv_image,text,1,(0,0,255),2)
-                elif 9<=r<=15:
-                    text="VEHICLE approaching from behind"
-                    vehicle_cmd_pub.publish("SLOW")
-                    put_text_center(cv_image,text,1,(0,0,255),2)
-                else:
-                    vehicle_cmd_pub.publish("NO CHANGE")
+                        # if 0 <= r <= 10:
+                        #     text = "VEHICLE AHEAD - STOP"
+                        #     vehicle_cmd_pub.publish("STOP")
+                        #     put_text_center(cv_image, text, 1, (0, 0, 255), 2)
+                        # elif 9 <= r <= 20:
+                        #     text = "VEHICLE AHEAD - SLOW DOWN"
+                        #     vehicle_cmd_pub.publish("SLOW DOWN")
+                        #     put_text_center(cv_image, text, 1, (0, 0, 255), 2)
+                        # else:
+                        #     vehicle_cmd_pub.publish("NO CHANGE")
 
-        # Show the modified image
-        cv2.imshow("Received image", cv_image)
-        cv2.waitKey(1)
-
+                        cv2.imshow("Sensor Fusion", cv_image)
+                        cv2.waitKey(1)
 
 
 

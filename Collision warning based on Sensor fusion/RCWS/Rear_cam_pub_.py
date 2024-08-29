@@ -52,9 +52,12 @@ else:
         raise ValueError("Camera with serial numbe not found.")
 
 
-# Connect to camera
-camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+# # Connect to camera
+# camera.AcquisitionFrameRate.SetValue(30)  # Set frame rate to 30 H
+#camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
 camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+d = camera.ResultingFrameRateAbs.Value
+print(d)
 converter = pylon.ImageFormatConverter()
 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned

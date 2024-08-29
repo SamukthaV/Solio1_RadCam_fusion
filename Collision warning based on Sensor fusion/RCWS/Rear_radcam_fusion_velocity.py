@@ -128,12 +128,12 @@ def image_callback(msg):
                 text = f"Range: {r:.2f} m"
                 cv2.putText(cv_image, text, (int(px), int(py) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors, 2)
                 vehicle_cmd_pub = rospy.Publisher('/bcws_commands', Float64, queue_size=1000)
-                if 0<=r<=15:
+                if 0<=r<=8:
                     text = "Rear collision alert"
                     vehicle_cmd_pub.publish("Rear collision alert")
                     print(v)
                     put_text_center(cv_image,text,1,(0,0,255),2)
-                elif 15<=r<=30:
+                elif 8<=r<=15:
                     text="VEHICLE approaching from behind"
                     vehicle_cmd_pub.publish("VEHICLE approaching from behind")
                     put_text_center(cv_image,text,1,(0,0,255),2)
