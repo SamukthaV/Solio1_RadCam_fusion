@@ -1,3 +1,7 @@
+''' 
+    Navigation using GNSS data and Perception data    
+    Last Author: Rishav KUMAR(Mtech AI - ai22mtech12003@iith.ac.in) 
+'''
 
 import math
 import os
@@ -10,99 +14,69 @@ import numpy as np
 import rospy
 from novatel_oem7_msgs.msg import BESTPOS, BESTVEL, INSPVA
 from sensor_msgs.msg import Imu
-from std_msgs.msg import Float32, String
+from std_msgs.msg import Float32, String, Int32
 
-# Define the MABX(vehicle control controller) IP address and port for sending data
-mabx_IP = "192.168.50.1"
-mabx_PORT = 30000
+# Define the MABX (vehicle control controller) IP address and port for sending data
+MABX_IP = "192.168.50.1"
+MABX_PORT = 30000
 
 # Define buffer size and local interface
 BUFFER_SIZE = 4096
-local_interface = "eth0"
-
-# Flasher dictionary
-FLASHER_DICT = {"None": 0, "Left": 1, "Right": 2, "Both": 3}
+LOCAL_INTERFACE = "eth0"
 
 # Conversion factor for latitude and longitude to meters
 LAT_LNG_TO_METER = 1.111395e5
 CW_flag = 0
 radar_flag = ""
-
+pot_time = 0
 
 # Initialize the ROS node for the algorithm
 rospy.init_node("GNSS_navigation", anonymous=True)
 
 # Initialize the UDP socket for MABX communication
 mabx_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-mabx_addr = (mabx_IP, mabx_PORT)
+mabx_addr = (MABX_IP, MABX_PORT)
+
 
 
 def setup_logging(file_path):
-    log_dir = os.path.expanduser(
-        "~/Desktop/Solio-ADAS/Solio-Suzuki/navigation/Development/devLogs"
-    )
-    base_filename = os.path.basename(file_path)
-    # Remove the file extension to get the desired string
-    logFileName = os.path.splitext(base_filename)[0]
-
-    # Create the log directory if it does not exist
+    """Setup logging configuration."""
+    log_dir = os.path.expanduser("~/Desktop/Solio-ADAS/Solio-Suzuki/navigation/logs")
+    logFileName = os.path.splitext(os.path.basename(file_path))[0]
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-
-    # Set up the logging format
     log_format = "%(asctime)s [%(levelname)s]: %(message)s"
     logging.basicConfig(level=logging.DEBUG, format=log_format)
-
-    # Create a log file with the current timestamp as the name
     current_time = datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
     log_filename = f"{logFileName}-{current_time}.log"
     log_path = os.path.join(log_dir, log_filename)
-
-    # Add a file handler to save logs to the file
     file_handler = logging.FileHandler(log_path)
     file_handler.setLevel(logging.DEBUG)
-
-    # Set the log format for the file handler
     file_handler.setFormatter(logging.Formatter(log_format))
-
-    # Add the file handler to the logger
     logger = logging.getLogger("")
     logger.addHandler(file_handler)
-
     return logger
 
+def log_and_print(str):
+    logger.info(str)
+    print(str)
 
-# def log_and_print(str):
-#     logger.info(str)
-#     print(str)
-
-
-# Function to parse and retrieve coordinates from a file
 def get_coordinates(file_path):
+    """Parse and retrieve coordinates from a file."""
     coordinates_list = []
     try:
         with open(file_path, "r") as file:
             for line in file:
                 try:
-                    coordinates = [
-                        float(coord) for coord in line.strip().strip("[],").split(",")
-                    ]
+                    coordinates = [float(coord) for coord in line.strip().strip("[],").split(",")]
                     coordinates_list.append(coordinates)
                 except ValueError:
-                    # Handle the exception if a value cannot be converted to float
-                    print(
-                        f"Error: Unable to convert coordinates in line '{line}' to float."
-                    )
+                    print(f"Error: Unable to convert coordinates in line '{line}' to float.")
     except FileNotFoundError:
-        # Handle the exception if the file is not found
         print(f"Error: The file '{file_path}' could not be found.")
     except Exception as e:
-        # Handle any other unexpected exceptions
         print(f"An error occurred: {e}")
-
     return coordinates_list
-
-
 def callback_flag(data):
     global CW_flag
     CW_flag = 0
@@ -112,35 +86,32 @@ def callback_radar(data):
     global radar_flag
     radar_flag = data.data
 
-
-    
+# Subscribers for the ROS topics (Perception)
 rospy.Subscriber("/vehicle_commands", String, callback_radar)
 
-
-# Callback functions for handling GNSS data
 def callback_velocity(data):
+    """Callback function to handle velocity data."""
     global current_vel
-    current_vel = 3.6 * data.hor_speed
-
+    current_vel = 3.6 * data.hor_speed  # Convert m/s to km/h
 
 def callback_heading(data):
+    """Callback function to handle heading data."""
     global heading
-    heading = (
-        data.azimuth
-    )  # Left-handed rotation around z-axis in degrees clockwise from North.
-
+    heading = data.azimuth
 
 def callback_latlng(data):
+    """Callback function to handle latitude and longitude data."""
     global lat, lng, lat_delta, lng_delta
     lat = data.lat
     lng = data.lon
     lat_delta = data.lat_stdev
     lng_delta = data.lon_stdev
 
-
 def callback_gnss_imu(data):
+    """Callback function to handle GNSS IMU data."""
     global acc_z
     acc_z = data.linear_acceleration.z
+
 
 rospy.Subscriber("/novatel/oem7/bestvel", BESTVEL, callback_velocity)
 rospy.Subscriber("/novatel/oem7/inspva", INSPVA, callback_heading)
@@ -149,9 +120,8 @@ rospy.Subscriber("/imu/data_raw", Imu, callback_gnss_imu)
 
 time.sleep(0.1)
 
-
-# Function to calculate and set steering angle based on current angle and target angle
 def set_angle(current_angle, angle_change):
+    """Calculate and set steering angle based on current angle and target angle."""
     gear_ratio = 17.75
     current_angle = max(min(current_angle, 40 * gear_ratio), -40 * gear_ratio)
     scaled_angle = (current_angle / gear_ratio - (-65.536)) / 0.002
@@ -163,20 +133,17 @@ def calc_checksum(message_bytes):
     checksum = sum(message_bytes) & 0xFF
     return (0x00 - checksum) & 0xFF
 
-
-
 def set_speed(speed):
+    """Set speed for the vehicle."""
     speed = speed * 128
-    high_byte_speed = (int)(speed) >> 8
-    low_byte_speed = (int)(speed) & 0xFF
+    high_byte_speed = int(speed) >> 8
+    low_byte_speed = int(speed) & 0xFF
     return high_byte_speed, low_byte_speed
 
-
 def get_speed(high_byte_speed, low_byte_speed):
-    speed = (high_byte_speed << 8) | low_byte_speed
-    speed = speed / 128
+    """Get speed from the high and low bytes."""
+    speed = ((high_byte_speed << 8) | low_byte_speed) / 128
     return speed
-
 
 def send_message_to_mabx(speed, current_angle, delta_angle, flasher_light, message_counter):
     """Send message to MABX."""
@@ -188,7 +155,7 @@ def send_message_to_mabx(speed, current_angle, delta_angle, flasher_light, messa
     ]
     message_bytes[2] = calc_checksum(message_bytes)
     message = bytearray(message_bytes)
-    print("=================================")
+    log_and_print("=================================")
     return message
 
 def calculate_steer_output(currentLocation, Current_Bearing):
@@ -212,10 +179,10 @@ def calculate_steer_output(currentLocation, Current_Bearing):
         bearing_diff -= 360
     if abs(bearing_diff) < 2:
         STEER_GAIN = 250
-    elif abs(bearing_diff) > 18:
-        STEER_GAIN = 1400
+    elif abs(bearing_diff) > 20:
+        STEER_GAIN = 1300
     steer_output = STEER_GAIN * np.arctan(-1 * 2 * 3.5 * np.sin(np.radians(bearing_diff)) / 8)
-    print(f"Steer GAIN : {STEER_GAIN} | Bearing Diff: {bearing_diff:.0f}")
+    # print(f"Steer GAIN : {STEER_GAIN} | Bearing Diff: {bearing_diff:.0f}")
     return steer_output, bearing_diff
 
 def calculate_bearing_difference_for_speed_reduction(currentLocation, Current_Bearing):
@@ -250,118 +217,120 @@ def navigation_output(latitude, longitude, Current_Bearing):
     # pothole_flag == 0
     flasher = 3  # 0 None, 1 Left, 2 Right, 3 Both ; For Indicator
     counter = (counter + 1) % 256
-    slowMode = False
 
     # log_and_print(f"Current :- Latitude: {latitude} , Longitude: {longitude}")
-    print(f"2D Standard Deviation(in cms): {100*lat_delta:.1f} cm")
+    log_and_print(f"2D Standard Deviation(in cms): {100*lat_delta:.2f} cm")
 
     currentLocation = [latitude, longitude]
     distance_to_final_waypoint = (np.linalg.norm(np.array(currentLocation) - waypoints[-1]) * LAT_LNG_TO_METER)
-   
-    if (distance_to_final_waypoint > 1 and wp < wp_len):  # to check if the final point is not less than 1m
 
-        steer_output, bearing_diff = calculate_steer_output(currentLocation, Current_Bearing)
+    if (distance_to_final_waypoint > 1 and wp < wp_len):  # to check if the final point is not less than 1m
+        if CW_flag == 1:
+            log_and_print(f"Collision Warning Status : Caution")
+        elif CW_flag == 2:
+            log_and_print(f"Collision Warning Status : Brake Signal")
+        else:
+            log_and_print(f"Collision Warning Status : Safe")
+
+        steer_output, bearing_diff = calculate_steer_output(
+            currentLocation, Current_Bearing
+        )
         steer_output *= -1.0
 
-        future_bearing_diff = calculate_bearing_difference_for_speed_reduction(currentLocation, Current_Bearing)
-        # print(f"{future_bearing_diff:.1f}")
+        future_bearing_diff = calculate_bearing_difference_for_speed_reduction(
+            currentLocation, Current_Bearing
+        )
+        # next_bearing_diff = bearing_diff - future_bearing_diff
+        # log_and_print(f"Future & Current Bearing diff : {next_bearing_diff:.1f}")
 
-        if wp < 10 or wp + 7 > wp_len:
-            const_speed = 10
-            slowMode = True
+        const_speed = speed
 
-        
+        if wp < 10 or wp_len - 10 < wp:  # Slow start and end in the waypoints
+            const_speed = turning_factor * speed
+
+        if abs(bearing_diff) > 5:
+            const_speed = turning_factor * speed
+            log_and_print(f"Turning Speed from code : {const_speed:.0f} kmph")
+        elif abs(future_bearing_diff) > 5:
+            const_speed = 0.8 * speed
+            log_and_print(f"Curve Speed from code : {const_speed:.0f} kmph")
+
+        # Collision WARNING
+        if CW_flag == 1:  # Caution Flag
+            const_speed = turning_factor * speed
+
+        elif CW_flag == 2:  # Brake Flag
+            const_speed = 0
+
         if radar_flag == "STOP":
             const_speed = 0
         elif radar_flag == "SLOW":
-            const_speed= turning_factor * speed
-        elif abs(future_bearing_diff) > 40:
-            const_speed = 8
-        elif abs(bearing_diff) > 5:
-            const_speed = max(turning_factor * speed, 9)
-            print(f"Turning Speed from code : {const_speed:.0f} kmph")
-        else:
-            if not slowMode:
-                const_speed = speed
-        
-        # print(const_speed)
+            const_speed = turning_factor * speed
+    file_path = "/home/suzuki/Desktop/Solio-S186/waypoints/waypoints-vehicledynamics.txt"    
 
-        distance_to_nextpoint = (np.linalg.norm(np.array(currentLocation) - waypoints[wp]) * LAT_LNG_TO_METER)
-        print(f"{wp} out of {wp_len} | Next Coordinate distance : {distance_to_nextpoint:.1f} m")  # For Testing
-        if wp < wp_len and distance_to_nextpoint < LOOK_AHEAD_DISTANCE:
+
+    distance_to_nextpoint = (np.linalg.norm(np.array(currentLocation) - waypoints[wp]) * LAT_LNG_TO_METER)
+    log_and_print(f"{wp} out of {wp_len} | Next Coordinate distance : {distance_to_nextpoint:.1f} m")
+    if wp < wp_len and distance_to_nextpoint < LOOK_AHEAD_DISTANCE:
             wp += 1
     else:
-        print(f"----- FINISHED  -----")
-        print(f"Brake Activated")
+        log_and_print(f"----- FINISHED  -----")
+        log_and_print(f"Brake Activated")
         steer_output = 0
         const_speed = 0
-        message = send_message_to_mabx(const_speed, steer_output, 0, FLASHER_DICT["Both"], counter)
+        message = send_message_to_mabx(const_speed, steer_output, 0, flasher, counter)
         mabx_socket.sendto(message, mabx_addr)
-
+    # log_and_print(f"Current Speed (MABX): {const_speed+5:.0f} kmph")
 
     if current_vel is not None and current_vel >= 2:
-        print(f"Current Speed (GNSS): {current_vel+3:.0f} kmph")
-  
+        log_and_print(f"Current Speed (GNSS): {current_vel+3:.0f} kmph")
     try:
-        message = send_message_to_mabx(const_speed, steer_output, 0, FLASHER_DICT["Both"], counter)
+        message = send_message_to_mabx(const_speed, steer_output, 0, flasher, counter)
         mabx_socket.sendto(message, mabx_addr)
     except Exception as e:
-        print(f"Error sending message to MABX: {e}")
+        log_and_print(f"Error sending message to MABX: {e}")
 
 def mainLoop():
+    """Main loop for navigation."""
     while not rospy.is_shutdown():
         try:
-            print(f"Current Coordinate No. : {wp}")
-            print(" ")
-            # log_and_print(f"Velocity in kmph as per GNSS= {current_vel:.0f} kmph")
-
+            log_and_print(f"Current Coordinate No. : {wp}")
+            log_and_print(" ")
             latitude = float(lat)
             longitude = float(lng)
             Current_Bearing = float(heading)
-
-            # time.sleep(SLEEP_INTERVAL/1000)
             navigation_output(latitude, longitude, Current_Bearing)
             time.sleep(SLEEP_INTERVAL / 1000)
         except ValueError as ve:
-            print(f"ValueError occurred: {ve}")
+            log_and_print(f"ValueError occurred: {ve}")
         except IOError as ioe:
-            print(f"IOError occurred: {ioe}")
-        except KeyboardInterrupt:  # Currently not working
-            print("Autonomous Mode is terminated manually!")
+            log_and_print(f"IOError occurred: {ioe}")
+        except KeyboardInterrupt:
+            log_and_print("Autonomous Mode is terminated manually!")
             message = send_message_to_mabx(0, 0, 0, 0, counter)
             mabx_socket.sendto(message, mabx_addr)
             raise SystemExit
         except Exception as e:
-            print(f"An error occurred: {e}")
-
+            log_and_print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     global speed, reduction_factor, steer_output, counter, wp, file_path
 
-    # Define the path(not relative path) to the waypoints file
-    #file_path = '/home/orin/basler_v8/Waypoints/waypoints-maingate_to_testbed.txt'
-    # file_path = "/home/orin/basler_v8/Waypoints/DEMO.txt"
-    file_path="/home/orin/basler_v8/Waypoints/waypoints-S-6.txt"
-    #file_path ="/home/orin/basler_v8/Waypoints/waypoints-changes1.txt"
-    #file_path ="/home/orin/basler_v8/Waypoints/waypoints-S_ROUTE1.txt"
-    #file_path = "/home/orin/basler_v8/Waypoints/waypoints-stright_road.txt"
+    #file_path = "/home/suzuki/Desktop/Solio-ADAS/Solio-Suzuki/Final_Demo/waypoints/waypoints---TB2M.txt"
+    #file_path = "/home/suzuki/Desktop/Solio-ADAS/Solio-Suzuki/Final_Demo/waypoints/waypoints---MG2TB.txt"
+    #file_path = "/home/orin/basler_v8/Waypoints/DEMO.txt"
+    file_path = "/home/orin/basler_v8/Waypoints/waypoints-stright_road.txt"
 
 
-    # log_dir = "devLogs"
-    # logger = setup_logging(file_path)
-    # logger.info("Development Code Starting")
-
-    # Set sleep interval and lookahead distance
-    SLEEP_INTERVAL = 100  # CHANGED FROM 5 TO 100
+    logger = setup_logging(file_path)
+    logger.info("Main Code Starting")
+    SLEEP_INTERVAL = 100
     LOOK_AHEAD_DISTANCE = 3
-
-    # Define initial speeds, pothole_speed, turning_factor
-    speed = 14
-    turning_factor = 0.5
+    speed = 15
+    turning_factor = 0.6
     wp = 0
     steer_output = 0
     counter = 0
     waypoints = get_coordinates(file_path)
     wp_len = len(waypoints)
-
     mainLoop()

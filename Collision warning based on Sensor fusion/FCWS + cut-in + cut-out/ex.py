@@ -67,7 +67,7 @@ def bbox_callback(msg):
     list_of_lists = unflatten_data(msg.data)
     # rospy.loginfo("################Received data of bbox_callback: %s", list_of_lists)
     current_bounding_boxes = list_of_lists
-def put_text_center(img, text, font_scale=1, color=(0, 0, 255), thickness=2):
+def put_text_center(class_name, img, text, font_scale=1, color=(0, 0, 255), thickness=2):
     """
     Places the specified text at the top center of the given image.
     
@@ -85,9 +85,10 @@ def put_text_center(img, text, font_scale=1, color=(0, 0, 255), thickness=2):
     # Calculate the x position to center the text
     text_x = int((img.shape[1] - text_size[0]) / 2)
 
-    # Set the y position to be just slightly below the top of the image
-    text_y = text_size[1] + 10  # 10 pixels padding from the top
-    
+    if (class_name!=0.0):
+        text_y = text_size[1] + 10  # 10 pixels padding from the top
+    else:
+        text_y = text_size[1] + 50# Set the y position to be just slightly below the top of the image   
 
     # Put the text on the image
     cv2.putText(img, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness)
@@ -212,9 +213,9 @@ def image_callback(msg):
                 text = f"Range: {r:.2f} m"
                 v = round(v,2)
                 velocity = f"Velocity: {float(v)} kmph"
-                put_text_top_left_of_box(cv_image, text, [x_max,x_min,y_max,y_min], font_scale=1.5, color=(235, 206, 135), thickness=2)
+                put_text_top_left_of_box(cv_image, text, [x_max,x_min,y_max,y_min], font_scale=1.5, color=(153, 0, 153), thickness=2)
                 # cv2.putText(cv_image, text, (int(px), int(py) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0., colors, 2)
-                put_text_bottom_left_of_box(cv_image, velocity, [x_max,x_min,y_max,y_min], font_scale=1.5, color=(235, 206, 135), thickness=2)
+                put_text_bottom_left_of_box(cv_image, velocity, [x_max,x_min,y_max,y_min], font_scale=1.5, color=(153, 0, 153), thickness=2)
                 # cv2.putText(cv_image, velocity, (int(px), int(py) +40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, colors, 2)
                 if class_name == 0.0:
                     out = "PEDESTRIAN AHEAD"
@@ -231,32 +232,24 @@ def image_callback(msg):
                 if 0 <= r <= 10:
                     text = out + " STOP"
                     vehicle_cmd_pub.publish("STOP")
-                    put_text_center(cv_image, text, 1, (0, 0, 255), 2)
+                    put_text_center(class_name,cv_image, text, 1, (0, 0, 255), 2)
                     check = 1
                 elif 10 < r <= 20:
                     text = out + " SLOW DOWN"
                     vehicle_cmd_pub.publish("SLOW")
-                    put_text_center(cv_image, text, 1, (0, 0, 255), 2)
+                    put_text_center(class_name,cv_image, text, 1, (0, 0, 255), 2)
                     check = 2
                 else:
                     text = out + " GO"
                     vehicle_cmd_pub.publish("GO")
-                    put_text_center(cv_image, text, 1, (0, 255, 0), 2)
+                    put_text_center(class_name,cv_image, text, 1, (0, 255, 0), 2)
 
-                # if 0 <= r <= 10:
-                #     text = "VEHICLE AHEAD - STOP"
-                #     vehicle_cmd_pub.publish("STOP")
-                #     put_text_center(cv_image, text, 1, (0, 0, 255), 2)
-                # elif 9 <= r <= 20:
-                #     text = "VEHICLE AHEAD - SLOW DOWN"
-                #     vehicle_cmd_pub.publish("SLOW DOWN")
-                #     put_text_center(cv_image, text, 1, (0, 0, 255), 2)
-                # else:
-                #     vehicle_cmd_pub.publish("NO CHANGE")
+
         if check == 0:
             vehicle_cmd_pub.publish("GO")
         # Show the modified image
         cv2.imshow("Sensor Fusion", cv_image)
+        #cv2.imwrite('/home/orin/basler_v8/Collision warning based on Sensor fusion/FCWS + cut-in + cut-out/image/1.png', cv_image)
         cv2.waitKey(1)
 
 

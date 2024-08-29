@@ -46,6 +46,7 @@ for device_info in device_info_list:
     print(device_info.GetSerialNumber())
     if device_info.GetSerialNumber() == target_serial_number:
         camera = pylon.InstantCamera(tl_factory.CreateDevice(device_info))
+        print("Inside the target serial number ", target_serial_number)
         break
 else:
     
@@ -53,9 +54,13 @@ else:
 
 
 # Connect to camera
-camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+#camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+# camera.AcquisitionFrameRate.SetValue(30)  # Set frame rate to 30 H
 camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
-converter = pylon.ImageFormatConverter()
+d = camera.ResultingFrameRateAbs.Value
+print(d)
+# camera.AcquisitionFrameRate.SetValue(30)  # Set frame rate to 30 H
+converter = pylon.ImageFormatConverter()                   
 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
@@ -63,12 +68,12 @@ converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 rospy.init_node('image_publisher_front', anonymous=True)
 
 # Create a publisher with the appropriate topic and message type for the image
+
 image_pub = rospy.Publisher('basler_front', Image, queue_size=10)
 bridge = CvBridge()
 
 # Create a publisher for bounding box details
 bbox_pub = rospy.Publisher('object_topic_front', Float32MultiArray, queue_size=10)
-
 # Create a publisher for the timestamp
 time_pub = rospy.Publisher("time_topic_front", String, queue_size=10)
 

@@ -2,7 +2,7 @@ import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
-from std_msgs.msg import Float32MultiArray, String
+from std_msgs.msg import Float32MultiArray, String, Float32
 from conti_radar.msg import radar_obj
 from datetime import datetime
 import numpy as np
@@ -45,8 +45,8 @@ def callback(data):
     timestamp = datetime.now().strftime('%H:%M:%S.%f')
     # print(timestamp)
     a.append(timestamp)
-    global current_x, current_y, vabsx, vabsy, arelx, arely, range
-    current_x, current_y, vabsx, vabsy = data.f_DistX, data.f_DistY, data.f_VabsX, data.f_VabsY
+    global current_x, current_y, vabsx, vabsy, arelx, arely, range, vrelx, vrely
+    current_x, current_y, vabsx, vabsy,vrelx, vrely = data.f_DistX, data.f_DistY, data.f_VabsX, data.f_VabsY,data.f_VrelX,data.f_VrelY
 
 def time_callback(msg):
     global b, i
@@ -75,7 +75,10 @@ def image_callback(msg):
 
     bridge = CvBridge()
     cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-
+    global check
+    check = 0
+    vehicle_cmd_pub = rospy.Publisher('/fcws_commands', String, queue_size=10)
+    vehicle_velo = rospy.Publisher('/vel_front',Float32,queue_size=100)
     if cv_image is not None and current_y is not None:
         # Extract relevant radar data
         x = np.asarray(current_x)
@@ -83,8 +86,10 @@ def image_callback(msg):
         range = np.sqrt(np.square(x) + np.square(y))
         velp = np.asarray(vabsx)
         velq = np.asarray(vabsy)
+        velrp=np.asarray(vrelx)
+        velrq=np.asarray(vrely)
         vel = np.sqrt(np.square(velp) + np.square(velq))
-
+        velr=np.sqrt(np.square(velrp) + np.square(velrq))
         # Project radar points onto the image
         predictions = compute_world2img_projection(np.vstack((x, y, np.ones_like(x) * 0.78)), ndlt)
         predictions = np.round(predictions.T)
@@ -99,7 +104,7 @@ def image_callback(msg):
             for i, (px, py) in enumerate(predictions):
                 px, py = int(px), int(py)
                 if x_min <= px <= x_max and y_min <= py <= y_max:
-                    if range[i] < min_range and -1.6 <= current_y[i] <= 1.6:   #road width
+                    if range[i] < min_range and -2.0 <= current_y[i] <= 2.0:   #road width
                         min_range = range[i]
                         min_range_index = i
 
@@ -109,38 +114,65 @@ def image_callback(msg):
                 r = range[min_range_index]
                 r = r - 4.0
                 v = vel[min_range_index]
-
+                vr = velr[min_range_index]
+                print("#########################",class_name)
                 # Print information about the closest radar point
                 print(f"Bounding Box: {class_name} ({x_min}, {y_min}) - ({x_max}, {y_max})")
-                print(f"Closest Point: ({px}, {py}), Range: {r:.2f} m, Velocity: {v:.1f} m/s")
-
+                # v= v*3.6
+                # vr= vr*3.6
+                print(f"Closest Point: ({px}, {py}), Range: {r:.2f} m, Velocity: {v:.1f} m/S")
+                vehicle_velo.publish(v)
                 # Draw the bounding box on the image
-                #cv2.rectangle(cv_image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
-
+                cv2.rectangle(cv_image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
                 # Draw a circle and text for the closest radar point
                 cv2.circle(cv_image, (int(px), int(py)), circle_radius, colors, -1)
                 text = f"Range: {r:.2f} m"
+                velocity = float(v)
+                v = float(v)
+                velocity = f"Velocity: {v: .1} m/s"
+                velocity = float(v)
+                           
                 cv2.putText(cv_image, text, (int(px), int(py) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors, 2)
+                cv2.putText(cv_image, velocity, (int(px), int(py) +40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors, 2)
+                if class_name == 0.0:
+                    out = "PEDESTRIAN AHEAD"
+                elif class_name == 1.0:
+                    out = "BICYCLE AHEAD"
+                elif class_name == 2.0:
+                    out = "CAR AHEAD"
+                elif class_name == 7.0:
+                    out = "TRUCK AHEAD"
+                else:
+                    out = "Unknown Object Ahead"
 
                 # Apply the condition for y value
-                vehicle_cmd_pub = rospy.Publisher('/fcws_commands', String, queue_size=10)
+                if 0 <= r <= 10:
+                    text = out + " STOP"
+                    vehicle_cmd_pub.publish("STOP")
+                    put_text_center(cv_image, text, 1, (0, 0, 255), 2)
+                    check = 1
+                elif 10 < r <= 20:
+                    text = out + " SLOW DOWN"
+                    vehicle_cmd_pub.publish("SLOW")
+                    put_text_center(cv_image, text, 1, (0, 0, 255), 2)
+                    check = 2
+                else:
+                    text = out + " GO"
+                    vehicle_cmd_pub.publish("GO")
+                    put_text_center(cv_image, text, 1, (0, 255, 0), 2)
+
                 # if 0 <= r <= 10:
                 #     text = "VEHICLE AHEAD - STOP"
                 #     vehicle_cmd_pub.publish("STOP")
                 #     put_text_center(cv_image, text, 1, (0, 0, 255), 2)
-                # elif 10 < r <= 20:
+                # elif 9 <= r <= 20:
                 #     text = "VEHICLE AHEAD - SLOW DOWN"
-                #     vehicle_cmd_pub.publish("SLOW")
+                #     vehicle_cmd_pub.publish("SLOW DOWN")
                 #     put_text_center(cv_image, text, 1, (0, 0, 255), 2)
                 # else:
-                #     text = "VEHICLE AHEAD - GO"
-                #     vehicle_cmd_pub.publish("GO")
-                #     put_text_center(cv_image, text, 1, (0, 255, 0), 2)
-
-        # Draw circles for all radar points
-        for px, py in predictions:
-            cv2.circle(cv_image, (int(px), int(py)), circle_radius, colors, -1)
-
+                #     vehicle_cmd_pub.publish("NO CHANGE")
+        if check == 0:
+            vehicle_cmd_pub.publish("GO")
         # Show the modified image
         cv2.imshow("Received image", cv_image)
         cv2.waitKey(1)
@@ -160,5 +192,6 @@ rospy.Subscriber("/radar_lrr_front_obj", radar_obj, callback)
 rospy.Subscriber("/object_topic_front", Float32MultiArray, bbox_callback)
 rospy.Subscriber("/time_topic_front", String, time_callback)
 rospy.Subscriber("/basler_front", Image, image_callback)
+
 
 rospy.spin()

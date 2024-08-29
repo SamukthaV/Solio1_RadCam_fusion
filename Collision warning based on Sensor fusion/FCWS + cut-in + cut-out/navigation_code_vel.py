@@ -72,9 +72,9 @@ def setup_logging(file_path):
     return logger
 
 
-# def log_and_print(str):
-#     logger.info(str)
-#     print(str)
+def log_and_print(str):
+    logger.info(str)
+    print(str)
 
 
 # Function to parse and retrieve coordinates from a file
@@ -115,6 +115,7 @@ def callback_radar(data):
 
     
 rospy.Subscriber("/vehicle_commands", String, callback_radar)
+rospy.Subscriber("/vel_front",Float32,callback_vel)
 
 
 # Callback functions for handling GNSS data
@@ -188,7 +189,7 @@ def send_message_to_mabx(speed, current_angle, delta_angle, flasher_light, messa
     ]
     message_bytes[2] = calc_checksum(message_bytes)
     message = bytearray(message_bytes)
-    print("=================================")
+    log_and_print("=================================")
     return message
 
 def calculate_steer_output(currentLocation, Current_Bearing):
@@ -212,10 +213,10 @@ def calculate_steer_output(currentLocation, Current_Bearing):
         bearing_diff -= 360
     if abs(bearing_diff) < 2:
         STEER_GAIN = 250
-    elif abs(bearing_diff) > 18:
-        STEER_GAIN = 1400
+    elif abs(bearing_diff) > 20:
+        STEER_GAIN = 1300
     steer_output = STEER_GAIN * np.arctan(-1 * 2 * 3.5 * np.sin(np.radians(bearing_diff)) / 8)
-    print(f"Steer GAIN : {STEER_GAIN} | Bearing Diff: {bearing_diff:.0f}")
+    # print(f"Steer GAIN : {STEER_GAIN} | Bearing Diff: {bearing_diff:.0f}")
     return steer_output, bearing_diff
 
 def calculate_bearing_difference_for_speed_reduction(currentLocation, Current_Bearing):
@@ -244,16 +245,14 @@ def calculate_bearing_difference_for_speed_reduction(currentLocation, Current_Be
     return future_bearing_diff
 
 
-
 def navigation_output(latitude, longitude, Current_Bearing):
     global counter, speed, wp, CW_flag, radar_flag, saw_pothole, const_speed, pothole_flag, acc_z, frame_count, pot_time, hit_time
     # pothole_flag == 0
     flasher = 3  # 0 None, 1 Left, 2 Right, 3 Both ; For Indicator
     counter = (counter + 1) % 256
-    slowMode = False
 
     # log_and_print(f"Current :- Latitude: {latitude} , Longitude: {longitude}")
-    print(f"2D Standard Deviation(in cms): {100*lat_delta:.1f} cm")
+    log_and_print(f"2D Standard Deviation(in cms): {100*lat_delta:.2f} cm")
 
     currentLocation = [latitude, longitude]
     distance_to_final_waypoint = (np.linalg.norm(np.array(currentLocation) - waypoints[-1]) * LAT_LNG_TO_METER)
@@ -263,36 +262,38 @@ def navigation_output(latitude, longitude, Current_Bearing):
         steer_output, bearing_diff = calculate_steer_output(currentLocation, Current_Bearing)
         steer_output *= -1.0
 
-        future_bearing_diff = calculate_bearing_difference_for_speed_reduction(currentLocation, Current_Bearing)
-        # print(f"{future_bearing_diff:.1f}")
+        future_bearing_diff = calculate_bearing_difference_for_speed_reduction(
+            currentLocation, Current_Bearing
+        )
+        if wp < 10 or wp +10 > wp_len :
+            const_speed = turning_factor * speed
+        sustain_time = 1.0
+        # next_bearing_diff = bearing_diff - future_bearing_diff
+        # log_and_print(f"Future & Current Bearing diff : {next_bearing_diff:.1f}")
 
-        if wp < 10 or wp + 7 > wp_len:
-            const_speed = 10
-            slowMode = True
+        const_speed = speed
 
-        
+        #if wp < 10 or wp_len - 10 < wp:  # Slow start and end in the waypoints
+        #    const_speed = turning_factor * speed
+
+        if abs(bearing_diff) > 5:
+            const_speed = max(turning_factor * speed, 9)
+            log_and_print(f"Curve Speed from code : {const_speed:.0f} kmph")
+
         if radar_flag == "STOP":
             const_speed = 0
         elif radar_flag == "SLOW":
-            const_speed= turning_factor * speed
-        elif abs(future_bearing_diff) > 40:
-            const_speed = 8
-        elif abs(bearing_diff) > 5:
-            const_speed = max(turning_factor * speed, 9)
-            print(f"Turning Speed from code : {const_speed:.0f} kmph")
+            const_speed = turning_factor * speed
         else:
-            if not slowMode:
-                const_speed = speed
-        
-        # print(const_speed)
+            const_speed = speed
 
         distance_to_nextpoint = (np.linalg.norm(np.array(currentLocation) - waypoints[wp]) * LAT_LNG_TO_METER)
-        print(f"{wp} out of {wp_len} | Next Coordinate distance : {distance_to_nextpoint:.1f} m")  # For Testing
+        log_and_print(f"{wp} out of {wp_len} | Next Coordinate distance : {distance_to_nextpoint:.1f} m")  # For Testing
         if wp < wp_len and distance_to_nextpoint < LOOK_AHEAD_DISTANCE:
-            wp += 1
+                wp += 1
     else:
-        print(f"----- FINISHED  -----")
-        print(f"Brake Activated")
+        log_and_print(f"----- FINISHED  -----")
+        log_and_print(f"Brake Activated")
         steer_output = 0
         const_speed = 0
         message = send_message_to_mabx(const_speed, steer_output, 0, FLASHER_DICT["Both"], counter)
@@ -300,19 +301,21 @@ def navigation_output(latitude, longitude, Current_Bearing):
 
 
     if current_vel is not None and current_vel >= 2:
-        print(f"Current Speed (GNSS): {current_vel+3:.0f} kmph")
+        log_and_print(f"Current Speed (GNSS): {current_vel+3:.0f} kmph")
   
     try:
         message = send_message_to_mabx(const_speed, steer_output, 0, FLASHER_DICT["Both"], counter)
         mabx_socket.sendto(message, mabx_addr)
     except Exception as e:
-        print(f"Error sending message to MABX: {e}")
+        log_and_print(f"Error sending message to MABX: {e}")
+
+
 
 def mainLoop():
     while not rospy.is_shutdown():
         try:
-            print(f"Current Coordinate No. : {wp}")
-            print(" ")
+            log_and_print(f"Current Coordinate No. : {wp}")
+            log_and_print(" ")
             # log_and_print(f"Velocity in kmph as per GNSS= {current_vel:.0f} kmph")
 
             latitude = float(lat)
@@ -323,16 +326,16 @@ def mainLoop():
             navigation_output(latitude, longitude, Current_Bearing)
             time.sleep(SLEEP_INTERVAL / 1000)
         except ValueError as ve:
-            print(f"ValueError occurred: {ve}")
+            log_and_print(f"ValueError occurred: {ve}")
         except IOError as ioe:
-            print(f"IOError occurred: {ioe}")
+            log_and_print(f"IOError occurred: {ioe}")
         except KeyboardInterrupt:  # Currently not working
-            print("Autonomous Mode is terminated manually!")
+            log_and_print("Autonomous Mode is terminated manually!")
             message = send_message_to_mabx(0, 0, 0, 0, counter)
             mabx_socket.sendto(message, mabx_addr)
             raise SystemExit
         except Exception as e:
-            print(f"An error occurred: {e}")
+            log_and_print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
@@ -340,24 +343,25 @@ if __name__ == "__main__":
 
     # Define the path(not relative path) to the waypoints file
     #file_path = '/home/orin/basler_v8/Waypoints/waypoints-maingate_to_testbed.txt'
-    # file_path = "/home/orin/basler_v8/Waypoints/DEMO.txt"
-    file_path="/home/orin/basler_v8/Waypoints/waypoints-S-6.txt"
-    #file_path ="/home/orin/basler_v8/Waypoints/waypoints-changes1.txt"
-    #file_path ="/home/orin/basler_v8/Waypoints/waypoints-S_ROUTE1.txt"
-    #file_path = "/home/orin/basler_v8/Waypoints/waypoints-stright_road.txt"
-
+    file_path = "/home/orin/basler_v8/Waypoints/DEMO.txt"
+    #file_path="/home/s186/Desktop/Solio-ADAS/Solio-Suzuki/navigation/Waypoints/waypoints-keshav4.txt"
+   #file_path ="/home/s186/Desktop/Solio-ADAS/Solio-Suzuki/navigation/Waypoints/waypoints-keshav2.txt"
 
     # log_dir = "devLogs"
-    # logger = setup_logging(file_path)
-    # logger.info("Development Code Starting")
+    logger = setup_logging(file_path)
+    logger.info("Development Code Starting")
 
     # Set sleep interval and lookahead distance
     SLEEP_INTERVAL = 100  # CHANGED FROM 5 TO 100
     LOOK_AHEAD_DISTANCE = 3
 
     # Define initial speeds, pothole_speed, turning_factor
-    speed = 14
-    turning_factor = 0.5
+    def callback_vel(data):
+        ego_speed = 16
+        obstacle_speed = data.data
+        output_speed = ego_speed - obstacle_speed
+    speed = 18
+    turning_factor = 0.6
     wp = 0
     steer_output = 0
     counter = 0
@@ -365,3 +369,5 @@ if __name__ == "__main__":
     wp_len = len(waypoints)
 
     mainLoop()
+
+
