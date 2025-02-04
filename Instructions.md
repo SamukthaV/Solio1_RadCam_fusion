@@ -26,7 +26,7 @@
 ## Enabling GNSS acquisition system
 To extract GPS information from the GNSS system, ensure the GNSS sensor is properly configured and connected. Use the following command to initiate the data extraction process. This will start the GNSS node and publish the GPS data for further use.
 ```bash
-sudo chmod 777 /dev/tty/USB*
+sudo chmod 777 /dev/ttyUSB*
 ```
 Before publishing any radar or camera data, ensure that the ROS environment is properly initialized. Run the below command to start the necessary ROS nodes and configurations.
 ```bash
